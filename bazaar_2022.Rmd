@@ -1,0 +1,85 @@
+---
+title: "Pins demo for the 2022 Data Science Bazaar"
+author: "Erwin Lares"
+date: "2/6/2022"
+output: html_document
+---
+
+```{r setup, include=TRUE, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(pins)
+
+```
+
+
+Pins is an R package that lets create "boards" for storing on a variety of services. Currently Pins supports boards that as backends RStudio Connect, AWS S3, Azure, Kaggle, Microsoft's OneDrive and Sharepoint. With some virtual elbow grease you can set up Pins to work with any url anywhere. 
+
+Once you have a board, you can pin files to easy and fast datasets sharing.
+Pins works best with file sizes smaller than 500 MB
+
+We will demo today how to create and access a Board on Connect by following the workflow of a fictional group of group of researchers located at Palmer Station. 
+
+
+## Imagine that you have a distributed team.
+
+Researcher 1 is in charge of creating and curating the data.
+
+```{r pins-on-connect}
+penguins <- read_csv("data/palmerpenguins.csv")
+
+#creates a board on RStudioConnect 
+board <- board_rsconnect()
+
+#pins an R object to said board 
+board %>% pin_write(penguins, "palmerpenguins",
+                    type = "csv")
+
+rm(penguins)
+rm(board)
+
+```
+
+## What can you do next?
+
+One can access that pinned file from anywhere! Researcher 2 is in charge of creating the visualizations
+
+
+```{r}
+
+#check
+board <- board_rsconnect()
+
+penguins <- pin_read(board, "lares/palmerpenguins")
+
+
+
+pplot <- penguins |> ggplot(aes(x = species, fill = species)) +
+    geom_histogram(stat = "count") +
+    facet_wrap(~island)
+
+board %>% pin_write(pplot, "penguinplot")
+
+rm(board)
+rm(penguins)
+rm(pplot)
+
+#data <-  pin_read(board, "cmtobin/Pinned-ecology-data")
+
+```
+
+## Accessing artifacts
+
+Researcher 3 is writing the report to the founding sources. 
+
+```{r}
+
+board <- board_rsconnect()
+
+plot <- pin_read(board, "lares/penguinplot")
+
+
+plot
+
+```
+
